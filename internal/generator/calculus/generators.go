@@ -2141,42 +2141,7 @@ func (g *functionSequencesGen) Generate(ctx generator.GeneratorContext) generato
 
 type seriesConceptGen struct{}
 
-func (g *seriesConceptGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"Is a series the sum of terms of a sequence? (yes/no)", "yes", "A series ∑ aₙ = a₁ + a₂ + a₃ + ... represents the sum of a sequence's terms; the sum of terms of a sequence."},
-		{"Is the nth partial sum the sum of the first n terms? (yes/no)", "yes", "The nth partial sum Sₙ = ∑_{k=1}ⁿ aₖ is the sum of the first n terms of the series."},
-		{"Does a series converge when its partial sums converge? (yes/no)", "yes", "A series converges if lim Sₙ exists and is finite; when the sequence of partial sums converges."},
-		{"Does every series converge? (yes/no)", "no", "No. E.g., the harmonic series diverges. To find the sum of a series means to find the limit of its partial sums; the sum is lim Sₙ."},
-	}
-	e := table[rand.Intn(len(table))]
-	if rand.Intn(3) == 0 {
-		return generator.Problem{
-			Question:    "The series 1+2+3 has partial sum S_3. What is S_3? (enter a number)",
-			Answer:      "6",
-			Explanation: "S_3 = 1+2+3 = 6.",
-		}
-	}
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
 type harmonicSeriesGen struct{}
-
-func (g *harmonicSeriesGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"Does the harmonic series \\(\\sum 1/n\\) converge or diverge?", "diverges", "The harmonic series \\(\\sum 1/n\\) diverges (slowly, like \\(\\ln(n)\\)), even though its terms \\(\\to 0\\)."},
-		{"For the p-series \\(\\sum 1/n^{p}\\): does p=2 converge? (yes/no)", "yes", "\\(\\sum 1/n^{p}\\) converges if \\(p>1\\), diverges if \\(p\\leq 1\\). The harmonic series \\((p=1)\\) is the boundary case."},
-		{"The nth partial sum H_n grows like ln(n). Does H_n stay bounded? (yes/no)", "no", "The harmonic numbers \\(H_{n} = \\sum_{k=1}^{n} 1/k \\approx \\ln(n) + \\gamma\\) grow without bound, where \\(\\gamma\\) is the Euler-Mascheroni constant."},
-		{"Does \\(\\sum 1/n^{2}\\) converge? (yes/no)", "yes", "\\(\\sum 1/n^{2}\\) converges \\((p=2>1)\\). Its sum is \\(\\pi^{2}/6 \\approx 1.645\\) (Basel problem)."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
 
 type positiveTermsGen struct{}
 
@@ -2212,36 +2177,7 @@ func (g *positiveTermsGen) Generate(ctx generator.GeneratorContext) generator.Pr
 
 type alternatingSeriesGen struct{}
 
-func (g *alternatingSeriesGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"Does an alternating series have terms that alternate in sign? (yes/no)", "yes", "An alternating series has terms that alternate between positive and negative: sum (-1)^n a(n)."},
-		{"Does the alternating series test need decreasing terms to 0? (yes/no)", "yes", "If |a(n)| decreases monotonically and a(n) → 0, then sum (-1)^n a(n) converges; a(n) decreasing to 0."},
-		{"Does \\(\\sum (-1)^{n}/n\\) converge?", "yes", "By the alternating series test: 1/n decreases and → 0. So it converges. It converges conditionally (sum 1/n diverges)."},
-		{"Does \\(\\sum (-1)^{n}\\) converge?", "no", "The terms do not → 0 (they alternate between -1 and 1). The series diverges by the nth term test."},
-		{"Bound the error stopping sum (-1)^n/n at n=10. (enter 1/11)", "1/11", "For a convergent alternating series with decreasing terms, |S - S(n)| ≤ a(n+1); remainder ≤ first omitted term 1/11."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
 type integralTestGen struct{}
-
-func (g *integralTestGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"Does the integral test compare a series against an improper integral? (yes/no)", "yes", "If \\(f\\) is positive, continuous, and decreasing on \\([1,\\infty)\\), then \\(\\sum f(n)\\) converges iff \\(\\int_{1}^{\\infty} f(x) \\, dx\\) converges."},
-		{"Does \\(\\sum 1/n^{2}\\) converge? Use integral test.", "yes", "\\(\\int_{1}^{\\infty} 1/x^{2} \\, dx = [-1/x]_{1}^{\\infty} = 1\\). The integral converges, so the series converges."},
-		{"Does \\(\\sum 1/n\\) converge? Use integral test.", "no", "\\(\\int_{1}^{\\infty} 1/x \\, dx = [\\ln(x)]_{1}^{\\infty} = \\infty\\). The integral diverges, so the series diverges."},
-		{"Apply integral test to \\(\\sum 1/(n \\ln n)\\) for \\(n\\geq 2\\).", "diverges", "\\(\\int_{2}^{\\infty} 1/(x \\ln x) \\, dx = [\\ln(\\ln x)]_{2}^{\\infty} = \\infty\\). So \\(\\sum 1/(n \\ln n)\\) diverges."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
 
 type rootTestEntry struct {
 	q, a, e string
@@ -3644,20 +3580,6 @@ func (g *geometricSeriesGen) Generate(ctx generator.GeneratorContext) generator.
 
 type nthTermGen struct{}
 
-func (g *nthTermGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"If a_n does not tend to 0, does the series diverge? (yes/no)", "yes", "Nth-term divergence test: convergence of sum a(n) requires a(n)→0; if a_n does not tend to 0, the series diverges."},
-		{"Does \\(\\sum n/(n+1)\\) converge?", "no", "Terms tend to 1, not 0, so the series diverges by the nth-term test."},
-		{"If \\(\\sum a_{n}\\) converges, what is \\(\\lim a_{n}\\)?", "0", "Convergence forces \\(a_{n}\\to 0\\) (necessary, not sufficient)."},
-		{"Does a_n to 0 guarantee convergence? (yes/no)", "no", "No. The harmonic series has 1/n→0 yet diverges."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
 type telescopingSeriesGen struct{}
 
 func (g *telescopingSeriesGen) Generate(ctx generator.GeneratorContext) generator.Problem {
@@ -3750,27 +3672,6 @@ func (g *limitCompareGen) Generate(ctx generator.GeneratorContext) generator.Pro
 }
 
 type absoluteConvergenceGen struct{}
-
-func (g *absoluteConvergenceGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"Does absolute convergence mean sum |a_n| converges? (yes/no)", "yes", "A series converges absolutely if the series of absolute values converges; sum |a(n)| converges."},
-		{"Does absolute convergence imply convergence?", "yes", "Absolute convergence is stronger: \\(\\sum|a_{n}|\\) convergent forces \\(\\sum a_{n}\\) convergent."},
-		{"Is \\(\\sum (-1)^{n}/n^{2}\\) absolutely convergent?", "yes", "\\(\\sum 1/n^{2}\\) converges, so the alternating version converges absolutely."},
-		{"Does sum (-1)^n/n converge absolutely? (yes/no)", "no", "sum 1/n diverges, so convergence is conditional only."},
-	}
-	e := table[rand.Intn(len(table))]
-	if rand.Intn(3) == 0 {
-		return generator.Problem{
-			Question:    "sum (-1)^n/n converges but sum 1/n diverges. What kind of convergence? (type absolute or conditional)",
-			Answer:      "conditional",
-			Explanation: "Converges (Leibniz) but not absolutely: conditional convergence.",
-		}
-	}
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
 
 type alternatingRemainderGen struct{}
 
