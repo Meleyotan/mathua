@@ -262,7 +262,7 @@
   "calc.deriv.hyperbolic": 6,
   "calc.deriv.implicit": 25,
   "calc.deriv.implicit_second": 7,
-  "calc.deriv.inflection": 6,
+  "calc.deriv.inflection": 30,
   "calc.deriv.inverse_func": 33,
   "calc.deriv.inverse_hyperbolic": 38,
   "calc.deriv.inverse_trig": 29,
