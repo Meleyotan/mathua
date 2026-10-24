@@ -1406,36 +1406,98 @@ func (g *differentialGen) Generate(ctx generator.GeneratorContext) generator.Pro
 type convexityGen struct{}
 
 func (g *convexityGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	// The answer is a classification rather than an expression, so the question
+	// is multiple choice. A symbolic concept renders a maths field, and a learner
+	// who types "convex" into it is marked wrong (report 118).
+	const convex, concave, neither = "convex", "concave", "neither"
+	var question, answer, explanation string
+	switch rand.Intn(3) {
+	case 0:
+		a := randRange(ctx.Difficulty, 1, 6)
+		if rand.Intn(2) == 0 {
+			a = -a
+		}
+		b := randRange(ctx.Difficulty, 0, 9)
+		f := fmt.Sprintf("%sx^{2}%s", coefStr(a), signedTerm(b, "x"))
+		question = fmt.Sprintf("Is \\(f(x)=%s\\) convex or concave?", f)
+		if a > 0 {
+			answer = convex
+		} else {
+			answer = concave
+		}
+		explanation = fmt.Sprintf("\\(f'(x)=2\\cdot(%d)x%+d\\) and \\(f''(x)=%d\\), which is %s zero everywhere, so \\(f\\) is %s everywhere.", a, b, 2*a, map[bool]string{true: "above", false: "below"}[a > 0], answer)
+	case 1:
+		a := randRange(ctx.Difficulty, 1, 3)
+		if rand.Intn(2) == 0 {
+			a = -a
+		}
+		p := randRange(ctx.Difficulty, 1, 4)
+		if rand.Intn(2) == 0 {
+			p = -p
+		}
+		b := randRange(ctx.Difficulty, 0, 6)
+		f := fmt.Sprintf("%sx^{3}%s", coefStr(a), signedTerm(b, "x"))
+		question = fmt.Sprintf("Is \\(f(x)=%s\\) convex or concave at \\(x=%d\\)?", f, p)
+		second := 6 * a * p
+		if second > 0 {
+			answer = convex
+		} else {
+			answer = concave
+		}
+		explanation = fmt.Sprintf("\\(f''(x)=%dx\\), so \\(f''(%d)=%d\\), which is %s zero. The curve is %s there.", 6*a, p, second, map[bool]string{true: "above", false: "below"}[second > 0], answer)
+	default:
+		n := randRange(ctx.Difficulty, 2, 6)
+		question = fmt.Sprintf("Is \\(f(x)=x^{%d}\\) convex or concave at \\(x=1\\)?", n)
+		answer = convex
+		explanation = fmt.Sprintf("\\(f''(x)=%s\\), and at \\(x=1\\) that is %d, which is positive. So \\(f\\) is convex at \\(x=1\\).", powTerm(n*(n-1), n-2), n*(n-1))
 	}
-	table := []entry{
-		{"If f''(x) > 0 for all x, the function is...", "convex (concave up)", "A positive second derivative means the function is convex (curving upward)."},
-		{"If f''(x) < 0 for all x, the function is...", "concave (concave down)", "A negative second derivative means the function is concave (curving downward)."},
-		{"Is f(x)=x² convex or concave?", "convex", "f''(x)=2 > 0, so f(x)=x² is convex everywhere."},
-		{"Is f(x)=-x² convex or concave?", "concave", "f''(x)=-2 < 0, so f(x)=-x² is concave everywhere."},
-		{"Is f(x)=x³ convex or concave at x=0?", "neither (inflection point)", "f''(x)=6x, so f''(0)=0 and the concavity changes sign at 0. x=0 is an inflection point."},
-		{"What is an inflection point?", "a point where concavity changes", "An inflection point is where the function changes from convex to concave or vice versa."},
+	distractors := []string{}
+	for _, o := range []string{convex, concave, neither} {
+		if o != answer {
+			distractors = append(distractors, o)
+		}
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	p := generator.MultipleChoice(question, answer, distractors...)
+	p.Explanation = explanation
+	return p
 }
 
 type nonDiffGen struct{}
 
 func (g *nonDiffGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	// Same reason as the continuity generator: the answer is a verdict, not an
+	// expression, so it is offered as choices instead of a maths field.
+	a := randRange(ctx.Difficulty, 1, 5)
+	if rand.Intn(2) == 0 {
+		a = -a
 	}
-	table := []entry{
-		{"Is f(x)=|x| differentiable at x=0?", "no", "|x| has a corner at x=0: left derivative = -1, right derivative = 1."},
-		{"Is f(x)=x^(1/3) differentiable at x=0?", "no", "f'(x)=1/(3x^(2/3)) → ∞ as x→0, so the derivative does not exist (vertical tangent)."},
-		{"Is f(x)=√|x| differentiable at x=0?", "no", "√|x| has a cusp at x=0: the derivative approaches ±∞ from each side."},
-		{"Name one way a function can fail to be differentiable.", "corner/cusp/vertical tangent/discontinuity", "Functions can fail to be differentiable at corners (|x|), cusps (√|x|), vertical tangents (x^(1/3)), or points of discontinuity."},
-		{"If a function is differentiable at x=c, is it necessarily continuous at x=c?", "yes", "Differentiability implies continuity. But the converse is not true, continuity does not imply differentiability."},
+	c := randRange(ctx.Difficulty, 1, 4)
+	var question, answer, explanation string
+	switch rand.Intn(5) {
+	case 0:
+		question = fmt.Sprintf("Is \\(f(x)=|x%+d|\\) differentiable at \\(x=%d\\)?", -a, a)
+		answer = "no"
+		explanation = fmt.Sprintf("The left slope at \\(x=%d\\) is -1 and the right slope is 1. A corner has no single tangent, so the derivative does not exist even though the function is continuous there.", a)
+	case 1:
+		question = fmt.Sprintf("Is \\(f(x)=x^{2}%+d\\) differentiable at \\(x=%d\\)?", c, a)
+		answer = "yes"
+		explanation = fmt.Sprintf("A polynomial is differentiable everywhere. \\(f'(x)=2x\\), so the slope at \\(x=%d\\) is %d.", a, 2*a)
+	case 2:
+		question = fmt.Sprintf("Is \\(f(x)=\\sqrt[3]{x%+d}\\) differentiable at \\(x=%d\\)?", -a, a)
+		answer = "no"
+		explanation = fmt.Sprintf("The function is continuous at \\(x=%d\\), but its slope grows without bound as \\(x\\) approaches %d. A vertical tangent means the derivative does not exist.", a, a)
+	case 3:
+		question = fmt.Sprintf("Is \\(f(x)=\\frac{%d}{x%+d}\\) differentiable at \\(x=%d\\)?", c, -a, a)
+		answer = "no"
+		explanation = fmt.Sprintf("The function is not even defined at \\(x=%d\\), because the denominator is zero there. Differentiability requires the function to exist at the point, so it fails earlier than the derivative.", a)
+	default:
+		question = fmt.Sprintf("Is \\(f(x)=(x%+d)|x%+d|\\) differentiable at \\(x=%d\\)?", -a, -a, a)
+		answer = "yes"
+		explanation = fmt.Sprintf("Both one-sided difference quotients at \\(x=%d\\) tend to 0, so the derivative exists and equals 0. The absolute value has a corner on its own, but multiplying by \\((x%+d)\\) flattens that corner into a horizontal tangent.", a, -a)
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	p := generator.MultipleChoice(question, answer, "yes", "no")
+	p.Explanation = explanation
+	return p
 }
 
 type partialDerivGen struct{}
@@ -2899,16 +2961,55 @@ func (g *derivTotalDiffGen) Generate(ctx generator.GeneratorContext) generator.P
 type derivDiffContinuityGen struct{}
 
 func (g *derivDiffContinuityGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	// A classification answer cannot be typed into a maths field, so every case
+	// is multiple choice. "differentiable but not continuous" is impossible by
+	// the theorem this concept teaches, and is the distractor that catches a
+	// learner who has the implication backwards.
+	const both = "both"
+	const contNotDiff = "continuous but not differentiable"
+	const diffNotCont = "differentiable but not continuous"
+	const neither = "neither"
+	a := randRange(ctx.Difficulty, 1, 5)
+	if rand.Intn(2) == 0 {
+		a = -a
 	}
-	table := []entry{
-		{"If \\(f\\) is differentiable at \\(a\\), must \\(f\\) be continuous at \\(a\\)? (yes/no)", "yes", "Differentiability at \\(a\\) implies continuity at \\(a\\): f is continuous at a."},
-		{"Does continuity imply differentiability?", "no", "Continuity does not imply differentiability (e.g. \\(|x|\\) at 0)."},
-		{"Give a function continuous but not differentiable at 0.", "|x|", "\\(f(x)=|x|\\) is continuous at 0 but has no derivative there (corner)."},
+	c := randRange(ctx.Difficulty, 1, 4)
+	var question, answer, explanation string
+	switch rand.Intn(5) {
+	case 0:
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=|x%+d|\\) continuous, differentiable, both or neither?", a, -a)
+		answer = contNotDiff
+		explanation = fmt.Sprintf("The two one-sided limits agree, so \\(f\\) is continuous at \\(x=%d\\). The left slope is -1 and the right slope is 1, so the derivative does not exist there: a corner.", a)
+	case 1:
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=x^{2}%+d\\) continuous, differentiable, both or neither?", a, c)
+		answer = both
+		explanation = fmt.Sprintf("A polynomial is continuous and differentiable everywhere, so at \\(x=%d\\) it is both. \\(f'(x)=2x\\), so the slope there is %d.", a, 2*a)
+	case 2:
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=\\frac{%d}{x%+d}\\) continuous, differentiable, both or neither?", a, c, -a)
+		answer = neither
+		explanation = fmt.Sprintf("The denominator is zero at \\(x=%d\\), so \\(f\\) is not defined there and cannot be continuous. Differentiability requires continuity, so it is neither.", a)
+	case 3:
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=|x%+d|\\) continuous, differentiable, both or neither?", a+1, -a)
+		answer = both
+		explanation = fmt.Sprintf("The corner of \\(|x%+d|\\) sits at \\(x=%d\\), not at \\(x=%d\\). At \\(x=%d\\) the function is smooth, so it is continuous and differentiable: at a point away from a corner, \\(|x|\\) behaves like a line.", -a, a, a+1, a+1)
+	case 4:
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=\\sqrt[3]{x%+d}\\) continuous, differentiable, both or neither?", a, -a)
+		answer = contNotDiff
+		explanation = fmt.Sprintf("A cube root is continuous at \\(x=%d\\), since the limit equals the value. Its derivative behaves like \\((x%+d)^{-2/3}\\), which grows without bound near \\(x=%d\\), so the tangent is vertical and the derivative does not exist.", a, -a, a)
+	default:
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=\\frac{x^{2}%+d}{x%+d}\\) continuous, differentiable, both or neither?", -a*a, -a)
+		answer = neither
+		explanation = fmt.Sprintf("The numerator factors as \\((x%+d)(x%+d)\\), so the limit at \\(x=%d\\) exists and equals %d. The function itself is undefined there, because the expression still divides by zero: the discontinuity is removable, but at \\(x=%d\\) it is neither continuous nor differentiable.", -a, a, a, 2*a, a)
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	distractors := []string{}
+	for _, o := range []string{both, contNotDiff, diffNotCont, neither} {
+		if o != answer {
+			distractors = append(distractors, o)
+		}
+	}
+	p := generator.MultipleChoice(question, answer, distractors...)
+	p.Explanation = explanation
+	return p
 }
 
 type derivJacobianGen struct{}
