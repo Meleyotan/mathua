@@ -232,28 +232,6 @@ func (g *limitPropertiesGen) Generate(ctx generator.GeneratorContext) generator.
 	}
 }
 
-type limitInfinityGen struct{}
-
-func (g *limitInfinityGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"\\(\\lim_{x \\to \\infty} 1/x\\)", "0", "As \\(x\\to\\infty\\), \\(1/x \\to 0\\)."},
-		{"\\(\\lim_{x \\to \\infty} 1/x^{2}\\)", "0", "As \\(x\\to\\infty\\), \\(1/x^{2} \\to 0\\)."},
-		{"\\(\\lim_{x \\to \\infty} x/(x+1)\\)", "1", "Divide numerator and denominator by \\(x\\): \\(1/(1+1/x) \\to 1\\)."},
-		{"\\(\\lim_{x \\to \\infty} 2x/(x+1)\\)", "2", "Divide numerator and denominator by \\(x\\): \\(2/(1+1/x) \\to 2\\)."},
-		{"\\(\\lim_{x \\to \\infty} (x^{2}+1)/x^{2}\\)", "1", "\\((x^{2}+1)/x^{2} = 1+1/x^{2} \\to 1\\)."},
-		{"\\(\\lim_{x \\to \\infty} 3\\)", "3", "The limit of a constant is the constant itself."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{
-		Question:    fmt.Sprintf("What is %s?", e.q),
-		Answer:      e.a,
-		Explanation: e.e,
-	}
-}
-
 type limitContinuityGen struct{}
 
 func (g *limitContinuityGen) Generate(ctx generator.GeneratorContext) generator.Problem {
@@ -1764,39 +1742,6 @@ func (g *weierstrassSubGen) Generate(ctx generator.GeneratorContext) generator.P
 
 // --- Limit generators ---
 
-type limitAlgebraGen struct{}
-
-func (g *limitAlgebraGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"What is lim (f(x)+g(x)) in terms of individual limits?", "lim f(x) + lim g(x)", "The limit of a sum is the sum of the limits (provided both exist)."},
-		{"Is the limit of a product the product of the limits? (yes/no)", "yes", "The limit of a product is lim f(x) times lim g(x) (provided both exist)."},
-		{"Is the limit of a quotient the quotient of the limits when the denominator limit is nonzero? (yes/no)", "yes", "The limit of a quotient is lim f(x) / lim g(x), provided the denominator limit is nonzero."},
-		{"Can a constant multiple be factored out of a limit? (yes/no)", "yes", "Constant multiples can be factored out: lim c f(x) = c times lim f(x)."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
-type asymptotesGen struct{}
-
-func (g *asymptotesGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"What are the vertical asymptotes of \\(f(x)=1/(x-2)\\)?", "x=2", "The denominator is 0 at \\(x=2\\), and the numerator is nonzero, so \\(x=2\\) is a vertical asymptote."},
-		{"What is the horizontal asymptote of \\(f(x)=1/x\\)?", "y=0", "As \\(x\\to\\infty\\), \\(1/x\\to 0\\). As \\(x\\to -\\infty\\), \\(1/x\\to 0\\). So \\(y=0\\) is the horizontal asymptote."},
-		{"What is the horizontal asymptote of \\(f(x)=\\frac{2x+1}{x-3}\\)?", "y=2", "As \\(x\\to\\infty\\), \\(\\frac{2x+1}{x-3}\\to 2\\). The ratio of leading coefficients gives the horizontal asymptote."},
-		{"Can a function cross its horizontal asymptote?", "yes", "A function CAN cross its horizontal asymptote (unlike vertical asymptotes). The asymptote describes end behavior only."},
-		{"What are the vertical asymptotes of \\(f(x)=\\tan(x)\\)? (enter as x = ...)", "x=pi/2 + n*pi", "\\(\\tan(x)=\\sin(x)/\\cos(x)\\). Vertical asymptotes occur where \\(\\cos(x)=0\\), i.e., at \\(x=\\pi/2+n\\pi\\)."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
 type discontinuityGen struct{}
 
 func (g *discontinuityGen) Generate(ctx generator.GeneratorContext) generator.Problem {
@@ -1871,23 +1816,6 @@ func (g *indeterminateGen) Generate(ctx generator.GeneratorContext) generator.Pr
 	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
 }
 
-type lhopitalGen struct{}
-
-func (g *lhopitalGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"Find \\(\\lim_{x \\to 0} \\frac{\\sin(x)}{x}\\) using L'Hôpital's rule.", "1", "Both numerator and denominator \\(\\to 0\\). L'Hôpital: \\(\\lim_{x \\to 0} \\frac{\\cos(x)}{1} = 1\\)."},
-		{"Find \\(\\lim_{x \\to 0} \\frac{e^{x}-1}{x}\\) using L'Hôpital's rule.", "1", "Both \\(\\to 0\\). L'Hôpital: \\(\\lim_{x \\to 0} \\frac{e^{x}}{1} = 1\\)."},
-		{"Find \\(\\lim_{x \\to \\infty} \\frac{x}{e^{x}}\\) using L'Hôpital's rule.", "0", "Both \\(\\to \\infty\\). L'Hôpital: \\(\\lim_{x \\to \\infty} \\frac{1}{e^{x}} = 0\\)."},
-		{"What condition is required for L'Hôpital's rule? (yes/no: a 0/0 or infinity/infinity form)", "yes", "L'Hôpital's rule applies to 0/0 or infinity/infinity indeterminate forms: both numerator and denominator tend to 0 or to plus/minus infinity."},
-		{"Is x^2*sin(1/x)/sin(x) as x→0 a 0/0 form? (yes/no)", "yes", "Both numerator and denominator tend to 0, so it is 0/0; L'Hôpital applies in principle but the derivatives oscillate, so the squeeze theorem is the practical tool."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
 type bigOGen struct{}
 
 func (g *bigOGen) Generate(ctx generator.GeneratorContext) generator.Problem {
@@ -1916,39 +1844,6 @@ func (g *littleOGen) Generate(ctx generator.GeneratorContext) generator.Problem 
 		{"Is x²=o(x³) as x→∞?", "yes", "x²/x³ = 1/x → 0, so x²=o(x³)."},
 		{"Is x³=o(x³) as x→∞?", "no", "x³/x³ = 1 → 1, not 0, so x³≠o(x³). However, x³=O(x³)."},
 		{"What is the difference between O and o? (yes/no: o needs ratio → 0, O allows any bounded ratio)", "yes", "f=O(g) means |f|≤M·|g| for large x. f=o(g) means f/g → 0, which is a stricter requirement: o requires ratio → 0; O allows any bounded ratio."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
-type squeezeGen struct{}
-
-func (g *squeezeGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"What does the squeeze theorem say? (yes/no: squeezed f takes the common limit L)", "yes", "The squeeze theorem: if g(x)≤f(x)≤h(x) and lim g=lim h=L, then lim f=L."},
-		{"Find \\(\\lim_{x \\to 0} x^{2} \\sin(1/x)\\) using the squeeze theorem.", "0", "\\(-1\\leq \\sin(1/x)\\leq 1 \\implies -x^{2} \\leq x^{2}\\sin(1/x) \\leq x^{2}\\). Since \\(-x^{2}\\to 0\\) and \\(x^{2}\\to 0\\), the squeeze theorem gives limit 0."},
-		{"Find \\(\\lim_{x \\to 0} x \\cos(1/x)\\) using the squeeze theorem.", "0", "\\(-1\\leq \\cos(1/x)\\leq 1 \\implies -x \\leq x\\cos(1/x) \\leq x\\). Since \\(-x\\to 0\\) and \\(x\\to 0\\), the limit is 0."},
-		{"What is a common way to apply the squeeze theorem? (yes/no: bound f between simpler functions with the same limit)", "yes", "Bound the function between two simpler functions with the same limit, then show the upper and lower bounds converge to that limit."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
-}
-
-type supremumGen struct{}
-
-func (g *supremumGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
-	}
-	table := []entry{
-		{"What is the supremum of the set \\(\\{1-1/n : n \\in \\mathbb{N}\\}\\)?", "1", "The values approach 1 from below. 1 is an upper bound, and no smaller number is an upper bound. Supremum = 1."},
-		{"What is the infimum of the set \\(\\{1/n : n \\in \\mathbb{N}\\}\\)?", "0", "The values approach 0 from above. 0 is a lower bound, and no larger number is a lower bound. Infimum = 0."},
-		{"Is the supremum always in the set?", "no", "The supremum need not be in the set. E.g., \\(\\sup\\{1-1/n\\}=1\\), but 1 is not in the set."},
-		{"Is the maximum always in the set?", "yes", "If a maximum exists, it is the supremum and is also in the set. Unlike supremum, maximum must be attained."},
-		{"What is \\(\\sup\\{x \\in \\mathbb{R} : x^{2}<2\\}\\)? (enter as sqrt(...))", "sqrt(2)", "The set is \\((-\\sqrt{2}, \\sqrt{2})\\). The supremum is \\(\\sqrt{2}\\) (the least upper bound), which is not in the set."},
 	}
 	e := table[rand.Intn(len(table))]
 	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
