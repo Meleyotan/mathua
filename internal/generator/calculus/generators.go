@@ -286,19 +286,14 @@ func (g *derivConceptGen) Generate(ctx generator.GeneratorContext) generator.Pro
 		a int
 		e string
 	}
-	table := []entry{
-		{"What is the slope of \\(f(x)=x^{2}\\) at \\(x=3\\)?", 6, "\\(f'(x)=2x\\), so \\(f'(3)=2 \\cdot 3 = 6\\)."},
-		{"What is the slope of \\(f(x)=x^{2}\\) at \\(x=2\\)?", 4, "\\(f'(x)=2x\\), so \\(f'(2)=2 \\cdot 2 = 4\\)."},
-		{"What is the slope of \\(f(x)=x^{2}\\) at \\(x=1\\)?", 2, "\\(f'(x)=2x\\), so \\(f'(1)=2 \\cdot 1 = 2\\)."},
-		{"What is the slope of \\(f(x)=2x^{2}\\) at \\(x=2\\)?", 8, "\\(f'(x)=4x\\), so \\(f'(2)=4 \\cdot 2 = 8\\)."},
-		{"What is the slope of \\(f(x)=x^{3}\\) at \\(x=2\\)?", 12, "\\(f'(x)=3x^{2}\\), so \\(f'(2)=3 \\cdot 4 = 12\\)."},
-		{"What is the slope of \\(f(x)=x^{3}\\) at \\(x=1\\)?", 3, "\\(f'(x)=3x^{2}\\), so \\(f'(1)=3 \\cdot 1 = 3\\)."},
-	}
-	e := table[rand.Intn(len(table))]
+	a := randRange(ctx.Difficulty, 1, 5)
+	n := randRange(ctx.Difficulty, 2, 4)
+	b := randRange(ctx.Difficulty, 1, 6)
+	deriv := scaledXPow(a*n, n-1)
 	return generator.Problem{
-		Question:    e.q,
-		Answer:      fmt.Sprintf("%d", e.a),
-		Explanation: e.e,
+		Question:    fmt.Sprintf("What is the slope of \\(f(x)=%s\\) at \\(x=%d\\)?", scaledXPow(a, n), b),
+		Answer:      strconv.Itoa(a * n * intPow(b, n-1)),
+		Explanation: fmt.Sprintf("\\(f'(x)=%s\\), so \\(f'(%d)=%d\\).", deriv, b, a*n*intPow(b, n-1)),
 	}
 }
 
@@ -364,27 +359,33 @@ func (g *derivProductRuleGen) Generate(ctx generator.GeneratorContext) generator
 type derivQuotientRuleGen struct{}
 
 func (g *derivQuotientRuleGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	scale := int(1 + ctx.Difficulty*4)
-	type entry struct {
-		q, a, e string
+	a := randRange(ctx.Difficulty, 1, 6)
+	b := randRange(ctx.Difficulty, 1, 6)
+	if a == b {
+		b++
 	}
-	tableEasy := []entry{
-		{"Find \\(f'(2)\\) if \\(f(x)=\\frac{x+1}{x-1}\\).", "-2", "Quotient rule: f'(x)=((x-1)·1-(x+1)·1)/(x-1)² = -2/(x-1)². f'(2) = -2/(1)² = -2."},
-		{"Find \\(f'(3)\\) if \\(f(x)=\\frac{x+2}{x-2}\\).", "-4", "f'(x)=((x-2)-(x+2))/(x-2)² = -4/(x-2)². f'(3) = -4/1 = -4."},
-		{"Find \\(f'(0)\\) if \\(f(x)=\\frac{x}{x+1}\\).", "1", "f'(x)=((x+1)-x)/(x+1)² = 1/(x+1)². f'(0) = 1/1 = 1."},
-		{"Find \\(f'(0)\\) if \\(f(x)=\\frac{x-1}{x+1}\\).", "2", "f'(x)=((x+1)-(x-1))/(x+1)² = 2/(x+1)². f'(0) = 2/1 = 2."},
-		{"For \\(f(x)=\\frac{x+1}{x-1}\\), what is \\(f'(x)\\) in terms of \\(x\\)?", "-2/(x-1)^2", "Quotient rule gives f'(x) = -2/(x-1)²."},
+	if rand.Intn(2) == 0 {
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\frac{x+%d}{x+%d}\\).", a, b),
+			Answer:      fmt.Sprintf("%d/(x+%d)^2", b-a, b),
+			Explanation: fmt.Sprintf("Quotient rule: the numerator is \\((x+%d)-(x+%d)=%d\\), so \\(f'(x)=%d/(x+%d)^2\\).", b, a, b-a, b-a, b),
+		}
 	}
-	tableHard := []entry{
-		{"Find \\(f'(2)\\) if \\(f(x)=\\frac{2x+1}{x-1}\\).", "-3", "f'(x)=((x-1)·2-(2x+1))/(x-1)² = -3/(x-1)². f'(2) = -3."},
-		{"Find \\(f'(1)\\) if \\(f(x)=\\frac{x+3}{x+1}\\).", "-1/2", "f'(x)=((x+1)-(x+3))/(x+1)² = -2/(x+1)². f'(1) = -2/4 = -1/2."},
+	c := randRange(ctx.Difficulty, 1, 6)
+	d := randRange(ctx.Difficulty, 1, 6)
+	num := fmt.Sprintf("%dx+%d", a, b)
+	den := fmt.Sprintf("%dx+%d", c, d)
+	if a == 1 {
+		num = fmt.Sprintf("x+%d", b)
 	}
-	pool := tableEasy
-	if scale > 3 {
-		pool = append(tableEasy, tableHard...)
+	if c == 1 {
+		den = fmt.Sprintf("x+%d", d)
 	}
-	e := pool[rand.Intn(len(pool))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	return generator.Problem{
+		Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\frac{%s}{%s}\\).", num, den),
+		Answer:      fmt.Sprintf("%d/(%s)^2", a*d-b*c, den),
+		Explanation: fmt.Sprintf("Quotient rule: \\((ad-bc)\\) with \\(a=%d\\), \\(d=%d\\), \\(b=%d\\), \\(c=%d\\) gives \\(%d/(%s)^2\\).", a, d, b, c, a*d-b*c, den),
+	}
 }
 
 type derivChainRuleGen struct{}
@@ -415,19 +416,27 @@ func (g *derivTrigGen) Generate(ctx generator.GeneratorContext) generator.Proble
 	type entry struct {
 		q, a, e string
 	}
-	table := []entry{
-		{"Find \\(f'(x)\\) if \\(f(x)=\\sin(x)\\).", "cos(x)", "\\(\\frac{d}{dx} \\sin(x) = \\cos(x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\cos(x)\\).", "-sin(x)", "\\(\\frac{d}{dx} \\cos(x) = -\\sin(x)\\)."},
-		{"What is \\(\\frac{d}{dx} \\sin(x)\\)?", "cos(x)", "The derivative of sine is cosine."},
-		{"What is \\(\\frac{d}{dx} \\cos(x)\\)?", "-sin(x)", "The derivative of cosine is \\(-\\sin(x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\sin(2x)\\).", "2cos(2x)", "Chain rule: \\(\\frac{d}{dx} \\sin(2x) = \\cos(2x) \\cdot 2 = 2\\cos(2x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\cos(3x)\\).", "-3sin(3x)", "Chain rule: \\(\\frac{d}{dx} \\cos(3x) = -\\sin(3x) \\cdot 3 = -3\\sin(3x)\\)."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{
-		Question:    e.q,
-		Answer:      e.a,
-		Explanation: e.e,
+	a := randRange(ctx.Difficulty, 1, 9)
+	b := randRange(ctx.Difficulty, 1, 9)
+	switch rand.Intn(3) {
+	case 0:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\sin(%s)\\).", argX(a)),
+			Answer:      coefTerm(a, fmt.Sprintf("cos(%s)", argX(a))),
+			Explanation: fmt.Sprintf("Chain rule: \\(\\frac{d}{dx}\\sin(%s)=\\cos(%s)\\cdot %d\\).", argX(a), argX(a), a),
+		}
+	case 1:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\cos(%s)\\).", argX(a)),
+			Answer:      "-" + coefTerm(a, fmt.Sprintf("sin(%s)", argX(a))),
+			Explanation: fmt.Sprintf("Chain rule: \\(\\frac{d}{dx}\\cos(%s)=-\\sin(%s)\\cdot %d\\).", argX(a), argX(a), a),
+		}
+	default:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\sin(%s)+\\cos(%s)\\).", argX(a), argX(b)),
+			Answer:      fmt.Sprintf("%s-%s", coefTerm(a, fmt.Sprintf("cos(%s)", argX(a))), coefTerm(b, fmt.Sprintf("sin(%s)", argX(b)))),
+			Explanation: fmt.Sprintf("Differentiate each term: \\(%s\\) then \\(-%s\\).", coefTerm(a, fmt.Sprintf("cos(%s)", argX(a))), coefTerm(b, fmt.Sprintf("sin(%s)", argX(b)))),
+		}
 	}
 }
 
@@ -437,20 +446,35 @@ func (g *derivExpLogGen) Generate(ctx generator.GeneratorContext) generator.Prob
 	type entry struct {
 		q, a, e string
 	}
-	table := []entry{
-		{"Find \\(f'(x)\\) if \\(f(x)=e^{x}\\).", "e^x", "\\(\\frac{d}{dx} e^{x} = e^{x}\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\ln(x)\\).", "1/x", "\\(\\frac{d}{dx} \\ln(x) = 1/x\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=e^{3x}\\).", "3e^(3x)", "Chain rule: \\(\\frac{d}{dx} e^{3x} = e^{3x} \\cdot 3 = 3e^{3x}\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=e^{2x}\\).", "2e^(2x)", "Chain rule: \\(\\frac{d}{dx} e^{2x} = e^{2x} \\cdot 2 = 2e^{2x}\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\ln(2x)\\).", "1/x", "Chain rule: \\(\\frac{d}{dx} \\ln(2x) = \\frac{1}{2x} \\cdot 2 = 1/x\\)."},
-		{"What is \\(\\frac{d}{dx} e^{x}\\)?", "e^x", "The derivative of \\(e^{x}\\) is \\(e^{x}\\)."},
-		{"What is \\(\\frac{d}{dx} \\ln(x)\\)?", "1/x", "The derivative of \\(\\ln(x)\\) is \\(1/x\\)."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{
-		Question:    e.q,
-		Answer:      e.a,
-		Explanation: e.e,
+	a := randRange(ctx.Difficulty, 1, 9)
+	b := randRange(ctx.Difficulty, 1, 5)
+	switch rand.Intn(3) {
+	case 0:
+		inner := "x"
+		if a > 1 {
+			inner = fmt.Sprintf("%dx", a)
+		}
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=e^{%s}\\).", inner),
+			Answer:      coefTerm(a, fmt.Sprintf("e^(%s)", inner)),
+			Explanation: fmt.Sprintf("Chain rule: \\(\\frac{d}{dx}e^{%s}=e^{%s}\\cdot %d\\).", inner, inner, a),
+		}
+	case 1:
+		arg := fmt.Sprintf("%dx+%d", a, b)
+		if a == 1 {
+			arg = fmt.Sprintf("x+%d", b)
+		}
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\ln(%s)\\).", arg),
+			Answer:      fmt.Sprintf("%d/(%s)", a, arg),
+			Explanation: fmt.Sprintf("Chain rule: \\(\\frac{d}{dx}\\ln(%s)=\\frac{%d}{%s}\\).", arg, a, arg),
+		}
+	default:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\ln(x^{%d})\\).", a),
+			Answer:      fmt.Sprintf("%d/x", a),
+			Explanation: fmt.Sprintf("\\(\\ln(x^{%d})=%d\\ln x\\), so the derivative is \\(%d/x\\).", a, a, a),
+		}
 	}
 }
 
@@ -2262,16 +2286,34 @@ func (g *derivTrigOtherGen) Generate(ctx generator.GeneratorContext) generator.P
 	type entry struct {
 		q, a, e string
 	}
-	table := []entry{
-		{"Find \\(f'(x)\\) if \\(f(x)=\\tan(x)\\).", "sec(x)^2", "\\(\\frac{d}{dx} \\tan(x) = \\sec^{2}(x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\sec(x)\\).", "sec(x)tan(x)", "\\(\\frac{d}{dx} \\sec(x) = \\sec(x)\\tan(x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\csc(x)\\).", "-csc(x)cot(x)", "\\(\\frac{d}{dx} \\csc(x) = -\\csc(x)\\cot(x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\cot(x)\\).", "-csc(x)^2", "\\(\\frac{d}{dx} \\cot(x) = -\\csc^{2}(x)\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\tan(2x)\\).", "2sec(2x)^2", "Chain rule: \\(\\frac{d}{dx} \\tan(2x) = \\sec^{2}(2x) \\cdot 2\\)."},
-		{"Find \\(f'(x)\\) if \\(f(x)=\\sec(3x)\\).", "3sec(3x)tan(3x)", "Chain rule: \\(\\frac{d}{dx} \\sec(3x) = \\sec(3x)\\tan(3x) \\cdot 3\\)."},
+	a := randRange(ctx.Difficulty, 1, 9)
+	inner := argX(a)
+	switch rand.Intn(4) {
+	case 0:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\tan(%s)\\).", inner),
+			Answer:      coefTerm(a, fmt.Sprintf("sec(%s)^2", inner)),
+			Explanation: fmt.Sprintf("\\(\\frac{d}{dx}\\tan(%s)=\\sec^{2}(%s)\\cdot %d\\).", inner, inner, a),
+		}
+	case 1:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\sec(%s)\\).", inner),
+			Answer:      coefTerm(a, fmt.Sprintf("sec(%s)tan(%s)", inner, inner)),
+			Explanation: fmt.Sprintf("\\(\\frac{d}{dx}\\sec(%s)=\\sec(%s)\\tan(%s)\\cdot %d\\).", inner, inner, inner, a),
+		}
+	case 2:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\csc(%s)\\).", inner),
+			Answer:      "-" + coefTerm(a, fmt.Sprintf("csc(%s)cot(%s)", inner, inner)),
+			Explanation: fmt.Sprintf("\\(\\frac{d}{dx}\\csc(%s)=-\\csc(%s)\\cot(%s)\\cdot %d\\).", inner, inner, inner, a),
+		}
+	default:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Find \\(f'(x)\\) if \\(f(x)=\\cot(%s)\\).", inner),
+			Answer:      "-" + coefTerm(a, fmt.Sprintf("csc(%s)^2", inner)),
+			Explanation: fmt.Sprintf("\\(\\frac{d}{dx}\\cot(%s)=-\\csc^{2}(%s)\\cdot %d\\).", inner, inner, a),
+		}
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
 }
 
 type derivInverseTrigGen struct{}
@@ -2437,15 +2479,21 @@ func (g *derivCriticalPointsGen) Generate(ctx generator.GeneratorContext) genera
 	type entry struct {
 		q, a, e string
 	}
-	table := []entry{
-		{"Find the critical points of \\(f(x)=x^{2}-4x\\).", "x=2", "\\(f'(x) = 2x-4 = 0\\) gives \\(x=2\\)."},
-		{"How many critical points does \\(f(x)=x^{3}-3x\\) have? (enter a number)", "2", "\\(f'(x) = 3x^{2}-3 = 0\\) gives \\(x=-1\\) and \\(x=1\\): 2 critical points."},
-		{"Is \\(x=2\\) a critical point of \\(f(x)=x^{2}-4x\\)? (yes/no)", "yes", "A critical point is an interior point where f'(x)=0 or f' is undefined. Here \\(f'(x)=2x-4\\), so \\(f'(2)=0\\)."},
-		{"Find the critical points of \\(f(x)=x^{3}\\).", "x=0", "\\(f'(x) = 3x^{2} = 0\\) gives \\(x=0\\) (a stationary point that is not an extremum)."},
-		{"How many critical points does \\(f(x)=2x^{3}-6x^{2}\\) have? (enter a number)", "2", "\\(f'(x) = 6x^{2}-12x = 6x(x-2) = 0\\) gives \\(x=0\\) and \\(x=2\\): 2 critical points."},
+	b := 2 * randRange(ctx.Difficulty, 1, 8)
+	c := randRange(ctx.Difficulty, 0, 9)
+	if rand.Intn(2) == 0 {
+		b = -b
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	f := fmt.Sprintf("x^{2}%s", signedTerm(b, "x"))
+	if c != 0 {
+		f += fmt.Sprintf("+%d", c)
+	}
+	root := -b / 2
+	return generator.Problem{
+		Question:    fmt.Sprintf("Find the critical point of \\(f(x)=%s\\).", f),
+		Answer:      fmt.Sprintf("x=%d", root),
+		Explanation: fmt.Sprintf("\\(f'(x)=2x%+d=0\\) gives \\(x=%d\\). A quadratic has exactly one critical point, and it is the vertex.", b, root),
+	}
 }
 
 type derivSecondTestGen struct{}
@@ -2471,14 +2519,23 @@ func (g *derivInflectionGen) Generate(ctx generator.GeneratorContext) generator.
 	type entry struct {
 		q, a, e string
 	}
-	table := []entry{
-		{"How many inflection points does \\(f(x)=x^{3}\\) have? (enter a number)", "1", "\\(f''(x) = 6x = 0\\) at \\(x=0\\), with concavity change there: one inflection point."},
-		{"How many inflection points does \\(f(x)=x^{4}-6x^{2}\\) have? (enter a number)", "2", "\\(f''(x) = 12x^{2}-12 = 0\\) at \\(x=\\pm 1\\), with concavity change on both sides: two points."},
-		{"Does an inflection point require concavity to change sign? (yes/no)", "yes", "An inflection point is where \\(f''\\) changes sign, i.e. concavity flips."},
-		{"Does \\(f(x)=x^{4}\\) have an inflection point at \\(x=0\\)?", "no", "\\(f''(0)=0\\) but \\(f''(x) = 12x^{2} \\geq 0\\) everywhere, so no sign change."},
+	b := 3 * randRange(ctx.Difficulty, 1, 12)
+	if rand.Intn(2) == 0 {
+		b = -b
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	if rand.Intn(3) == 0 {
+		return generator.Problem{
+			Question:    fmt.Sprintf("How many inflection points does \\(f(x)=x^{4}%s\\) have? (enter a number)", signedTerm(2*3*b, "x^{2}")),
+			Answer:      strconv.Itoa(0),
+			Explanation: fmt.Sprintf("\\(f''(x)=12x^{2}%+d\\) is positive everywhere, so the concavity never changes: no inflection point.", 12*3*b),
+		}
+	}
+	root := -b / 3
+	return generator.Problem{
+		Question:    fmt.Sprintf("Find the inflection point of \\(f(x)=x^{3}%s\\).", signedTerm(b, "x^{2}")),
+		Answer:      fmt.Sprintf("x=%d", root),
+		Explanation: fmt.Sprintf("\\(f''(x)=6x%+d=0\\) gives \\(x=%d\\), and \\(f''\\) changes sign there, so it is an inflection point.", 2*b, root),
+	}
 }
 
 type derivGlobalExtremaGen struct{}

@@ -1,6 +1,7 @@
 package calculus
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"strconv"
@@ -145,4 +146,28 @@ func scaledXPow(c, k int) string {
 		return varPow("x", k)
 	}
 	return strconv.Itoa(c) + varPow("x", k)
+}
+
+// argX renders the argument of a trigonometric function: a multiplier of one is
+// silent, so sin(x) does not read sin(1x).
+func argX(a int) string {
+	if a == 1 {
+		return "x"
+	}
+	return fmt.Sprintf("%dx", a)
+}
+
+// signedTerm renders a term with its sign attached, for building a polynomial
+// string where the next coefficient may be negative.
+func signedTerm(c int, v string) string {
+	switch {
+	case c == 1:
+		return "+" + v
+	case c == -1:
+		return "-" + v
+	case c > 0:
+		return fmt.Sprintf("+%d%s", c, v)
+	default:
+		return fmt.Sprintf("-%d%s", -c, v)
+	}
 }
