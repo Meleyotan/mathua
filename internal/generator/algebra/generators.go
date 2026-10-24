@@ -1575,12 +1575,29 @@ func (g *funcSignGen) Generate(ctx generator.GeneratorContext) generator.Problem
 type ineqAbsValGen struct{}
 
 func (g *ineqAbsValGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	a := rand.Intn(5) + 1
-	return generator.Problem{
-		Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(|x| < %d\\)? (enter a number)", a),
-		Answer:      fmt.Sprintf("%d", a-1),
-		Explanation: fmt.Sprintf("\\(|x| < %d\\) means \\(-%d < x < %d\\), so the largest integer is %d", a, a, a, a-1),
-		Facts:       map[string]string{"a": strconv.Itoa(a), "x": strconv.Itoa(a - 1)},
+	a := rand.Intn(18) + 3
+	switch rand.Intn(3) {
+	case 0:
+		return generator.Problem{
+			Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(|x| < %d\\)? (enter a number)", a),
+			Answer:      fmt.Sprintf("%d", a-1),
+			Explanation: fmt.Sprintf("\\(|x| < %d\\) means \\(-%d < x < %d\\), so the largest integer is %d", a, a, a, a-1),
+			Facts:       map[string]string{"a": strconv.Itoa(a), "x": strconv.Itoa(a - 1)},
+		}
+	case 1:
+		return generator.Problem{
+			Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(|x| \\leq %d\\)? (enter a number)", a),
+			Answer:      fmt.Sprintf("%d", a),
+			Explanation: fmt.Sprintf("\\(|x| \\leq %d\\) means \\(-%d \\leq x \\leq %d\\), and %d is included, so the largest integer is %d", a, a, a, a, a),
+			Facts:       map[string]string{"a": strconv.Itoa(a), "x": strconv.Itoa(a)},
+		}
+	default:
+		return generator.Problem{
+			Question:    fmt.Sprintf("What is the smallest integer \\(x\\) with \\(|x| > %d\\)? (enter a number)", a),
+			Answer:      fmt.Sprintf("%d", a+1),
+			Explanation: fmt.Sprintf("\\(|x| > %d\\) excludes every value from \\(-%d\\) to %d, so the smallest integer above the gap is %d", a, a, a, a+1),
+			Facts:       map[string]string{"a": strconv.Itoa(a), "x": strconv.Itoa(a + 1)},
+		}
 	}
 }
 
@@ -1664,24 +1681,42 @@ func (g *ineqLogGen) Generate(ctx generator.GeneratorContext) generator.Problem 
 type ineqQuadraticGen struct{}
 
 func (g *ineqQuadraticGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	r := rand.Intn(5) + 1
+	r := rand.Intn(18) + 2
+	// The endpoint case is the one learners get wrong: a strict inequality
+	// excludes the root, an inclusive one includes it.
+	if rand.Intn(2) == 0 {
+		return generator.Problem{
+			Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(x^{2} - %d < 0\\)? (enter a number)", r*r),
+			Answer:      fmt.Sprintf("%d", r-1),
+			Explanation: fmt.Sprintf("\\(x^{2} - %d < 0\\) → \\((x-%d)(x+%d) < 0\\) → \\(-%d < x < %d\\), so the largest integer is %d", r*r, r, r, r, r, r-1),
+			Facts:       map[string]string{"r2": strconv.Itoa(r * r), "r": strconv.Itoa(r), "x": strconv.Itoa(r - 1)},
+		}
+	}
 	return generator.Problem{
-		Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(x^{2} - %d < 0\\)? (enter a number)", r*r),
-		Answer:      fmt.Sprintf("%d", r-1),
-		Explanation: fmt.Sprintf("\\(x^{2} - %d < 0\\) → \\((x-%d)(x+%d) < 0\\) → \\(-%d < x < %d\\), so the largest integer is %d", r*r, r, r, r, r, r-1),
-		Facts:       map[string]string{"r2": strconv.Itoa(r * r), "r": strconv.Itoa(r), "x": strconv.Itoa(r - 1)},
+		Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(x^{2} - %d \\leq 0\\)? (enter a number)", r*r),
+		Answer:      fmt.Sprintf("%d", r),
+		Explanation: fmt.Sprintf("\\(x^{2} \\leq %d\\) allows \\(x = %d\\) as well as every value between \\(-%d\\) and %d, so the largest integer is %d", r*r, r, r, r, r),
+		Facts:       map[string]string{"r2": strconv.Itoa(r * r), "r": strconv.Itoa(r), "x": strconv.Itoa(r)},
 	}
 }
 
 type ineqRationalGen struct{}
 
 func (g *ineqRationalGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	a := rand.Intn(5) + 1
+	a := rand.Intn(18) + 2
+	if rand.Intn(2) == 0 {
+		return generator.Problem{
+			Question:    fmt.Sprintf("What is the smallest integer \\(x\\) with \\(\\frac{1}{x-%d} > 0\\)? (enter a number)", a),
+			Answer:      fmt.Sprintf("%d", a+1),
+			Explanation: fmt.Sprintf("The numerator 1 is always positive, so \\(\\frac{1}{x-%d} > 0\\) when \\(x-%d > 0\\) → \\(x > %d\\); the smallest integer is %d", a, a, a, a+1),
+			Facts:       map[string]string{"a": strconv.Itoa(a), "ans": strconv.Itoa(a + 1)},
+		}
+	}
 	return generator.Problem{
-		Question:    fmt.Sprintf("What is the smallest integer \\(x\\) with \\(\\frac{1}{x-%d} > 0\\)? (enter a number)", a),
-		Answer:      fmt.Sprintf("%d", a+1),
-		Explanation: fmt.Sprintf("The numerator 1 is always positive, so \\(\\frac{1}{x-%d} > 0\\) when \\(x-%d > 0\\) → \\(x > %d\\); the smallest integer is %d", a, a, a, a+1),
-		Facts:       map[string]string{"a": strconv.Itoa(a), "ans": strconv.Itoa(a + 1)},
+		Question:    fmt.Sprintf("What is the largest integer \\(x\\) with \\(\\frac{1}{x-%d} < 0\\)? (enter a number)", a),
+		Answer:      fmt.Sprintf("%d", a-1),
+		Explanation: fmt.Sprintf("A negative reciprocal needs a negative denominator, so \\(x-%d < 0\\) → \\(x < %d\\); the largest integer is %d", a, a, a-1),
+		Facts:       map[string]string{"a": strconv.Itoa(a), "ans": strconv.Itoa(a - 1)},
 	}
 }
 
@@ -1867,11 +1902,19 @@ func (g *quadComplexGen) Generate(ctx generator.GeneratorContext) generator.Prob
 type quadIncompleteGen struct{}
 
 func (g *quadIncompleteGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	k := rand.Intn(5) + 1
+	k := rand.Intn(18) + 2
+	if rand.Intn(2) == 0 {
+		return generator.Problem{
+			Question:    fmt.Sprintf("Solve: \\(x^{2} - %d = 0\\)", k*k),
+			Answer:      fmt.Sprintf("%d,%d", k, -k),
+			Explanation: fmt.Sprintf("\\(x^{2} = %d\\) → \\(x = \\pm \\sqrt{%d} = \\pm %d\\)", k*k, k*k, k),
+			Facts:       map[string]string{"k2": strconv.Itoa(k * k), "k": strconv.Itoa(k)},
+		}
+	}
 	return generator.Problem{
-		Question:    fmt.Sprintf("Solve: \\(x^{2} - %d = 0\\)", k*k),
+		Question:    fmt.Sprintf("Solve: \\(x^{2} = %d\\)", k*k),
 		Answer:      fmt.Sprintf("%d,%d", k, -k),
-		Explanation: fmt.Sprintf("\\(x^{2} = %d\\) → \\(x = \\pm \\sqrt{%d} = \\pm %d\\)", k*k, k*k, k),
+		Explanation: fmt.Sprintf("Taking the square root of both sides gives \\(x = \\pm %d\\), and %d is a perfect square, so both roots are integers.", k, k*k),
 		Facts:       map[string]string{"k2": strconv.Itoa(k * k), "k": strconv.Itoa(k)},
 	}
 }
@@ -1887,13 +1930,33 @@ func (g *quadIncompleteGen) Generate(ctx generator.GeneratorContext) generator.P
 type quadParametricGen struct{}
 
 func (g *quadParametricGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	p := rand.Intn(5) + 1
+	p := rand.Intn(29) + 2
 	k := 2 * p
-	return generator.Problem{
-		Question:    fmt.Sprintf("For what positive value of \\(k\\) does \\(x^{2} + kx + %d = 0\\) have exactly one solution?", p*p),
-		Answer:      strconv.Itoa(k),
-		Explanation: fmt.Sprintf("Exactly one solution means the discriminant is zero: \\(k^{2} - 4(%d) = 0\\), so \\(k^{2} = %d\\) and the positive value is \\(k = %d\\).", p*p, k*k, k),
-		Facts:       map[string]string{"coef": strconv.Itoa(k), "const": strconv.Itoa(p * p), "k": strconv.Itoa(k)},
+	// Three ways of asking the same discriminant condition, so the answer set is
+	// not one number per parameter: k from the constant, the constant from k, and
+	// the negative middle coefficient.
+	switch rand.Intn(3) {
+	case 0:
+		return generator.Problem{
+			Question:    fmt.Sprintf("For what positive value of \\(k\\) does \\(x^{2} + kx + %d = 0\\) have exactly one solution?", p*p),
+			Answer:      strconv.Itoa(k),
+			Explanation: fmt.Sprintf("Exactly one solution means the discriminant is zero: \\(k^{2} - 4(%d) = 0\\), so \\(k^{2} = %d\\) and the positive value is \\(k = %d\\).", p*p, k*k, k),
+			Facts:       map[string]string{"shape": "askK", "coef": strconv.Itoa(k), "const": strconv.Itoa(p * p), "k": strconv.Itoa(k), "answer": strconv.Itoa(k)},
+		}
+	case 1:
+		return generator.Problem{
+			Question:    fmt.Sprintf("For what positive value of \\(c\\) does \\(x^{2} + %dx + c = 0\\) have exactly one solution?", k),
+			Answer:      strconv.Itoa(p * p),
+			Explanation: fmt.Sprintf("The discriminant is \\(%d^{2} - 4c\\), and it must be zero: \\(4c = %d\\), so \\(c = %d\\).", k, k*k, p*p),
+			Facts:       map[string]string{"shape": "askC", "coef": strconv.Itoa(k), "const": strconv.Itoa(p * p), "k": strconv.Itoa(k), "answer": strconv.Itoa(p * p)},
+		}
+	default:
+		return generator.Problem{
+			Question:    fmt.Sprintf("For what positive value of \\(k\\) does \\(x^{2} - kx + %d = 0\\) have exactly one solution?", p*p),
+			Answer:      strconv.Itoa(k),
+			Explanation: fmt.Sprintf("The discriminant is \\(k^{2} - 4(%d)\\), which is zero when \\(k = %d\\) for the positive choice.", p*p, k),
+			Facts:       map[string]string{"shape": "askKNeg", "coef": strconv.Itoa(-k), "const": strconv.Itoa(p * p), "k": strconv.Itoa(k), "answer": strconv.Itoa(k)},
+		}
 	}
 }
 
