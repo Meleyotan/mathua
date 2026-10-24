@@ -499,14 +499,31 @@ func (g *dirichletTestGen) Generate(ctx generator.GeneratorContext) generator.Pr
 type gammaFunctionGen struct{}
 
 func (g *gammaFunctionGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	n := 4 + rand.Intn(5) // 4..8
+	n := randRange(ctx.Difficulty, 3, 13)
+	switch rand.Intn(3) {
+	case 0:
+		// The recurrence is the idea; the factorial is the computation.
+		return generator.Problem{
+			Question:    fmt.Sprintf("Use \\(\\Gamma(n+1)=n\\Gamma(n)\\). What is \\(\\Gamma(%d)/\\Gamma(%d)\\)?", n+1, n),
+			Answer:      strconv.Itoa(n),
+			Explanation: fmt.Sprintf("\\(\\Gamma(%d)=%d\\,\\Gamma(%d)\\), so the ratio is %d.", n+1, n, n, n),
+			Facts:       map[string]string{"n": strconv.Itoa(n), "shape": "ratio1"},
+		}
+	case 1:
+		return generator.Problem{
+			Question:    fmt.Sprintf("Use \\(\\Gamma(n+1)=n\\Gamma(n)\\) twice. What is \\(\\Gamma(%d)/\\Gamma(%d)\\)?", n+2, n),
+			Answer:      strconv.Itoa(n * (n + 1)),
+			Explanation: fmt.Sprintf("\\(\\Gamma(%d)=(%d)(%d)\\Gamma(%d)\\), so the ratio is %d × %d = %d.", n+2, n+1, n, n, n+1, n, n*(n+1)),
+			Facts:       map[string]string{"n": strconv.Itoa(n), "shape": "ratio2"},
+		}
+	}
 	value := calcFact(n - 1)
 	answer := strconv.Itoa(value)
 	return generator.Problem{
-		Question:    fmt.Sprintf("The gamma function satisfies \\(\\Gamma(n) = (n-1)!\\) for positive integers. What is \\(\\Gamma(%d)\\)? (enter a number)", n),
+		Question:    fmt.Sprintf("The gamma function satisfies \\(\\Gamma(n) = (n-1)!\\) for positive integers. What is \\(\\Gamma(%d)\\)?", n),
 		Answer:      answer,
 		Explanation: fmt.Sprintf("\\(\\Gamma(%d) = %d! = %d\\).", n, n-1, value),
-		Facts:       map[string]string{"n": strconv.Itoa(n), "value": answer},
+		Facts:       map[string]string{"n": strconv.Itoa(n), "value": answer, "shape": "factorial"},
 	}
 }
 

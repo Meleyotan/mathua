@@ -2181,17 +2181,33 @@ func (g *harmonicSeriesGen) Generate(ctx generator.GeneratorContext) generator.P
 type positiveTermsGen struct{}
 
 func (g *positiveTermsGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	p := randRange(ctx.Difficulty, 2, 5)
+	c := randRange(ctx.Difficulty, 1, 9)
+	// Classification answers are multiple choice: this concept is graded
+	// symbolic, and "yes" cannot be typed into a maths field. Two of the four
+	// shapes answer "no", because an easy pool where every answer is "yes"
+	// lets a learner score without reading the question.
+	switch rand.Intn(4) {
+	case 0:
+		q := fmt.Sprintf("Does every term of \\(\\sum_{n=1}^{\\infty}\\frac{1}{n^{%d}+%d}\\) satisfy \\(a_n\\ge 0\\)?", p, c)
+		r := generator.MultipleChoice(q, "yes", "no")
+		r.Explanation = "For every \\(n\\ge 1\\), the denominator is positive, so each term is positive. That positivity is what makes the comparison tests usable at all."
+		return r
+	case 1:
+		q := fmt.Sprintf("Does every term of \\(\\sum_{n=1}^{\\infty}\\frac{(-1)^{n}}{n+%d}\\) satisfy \\(a_n\\ge 0\\)?", c)
+		r := generator.MultipleChoice(q, "no", "yes")
+		r.Explanation = "The signs alternate: odd \\(n\\) gives a negative term, even \\(n\\) a positive one. The comparison tests need non-negative terms, so this series must be handled as an alternating series instead."
+		return r
+	case 2:
+		q := "If \\(0\\le a_n\\le b_n\\) and \\(\\sum b_n\\) converges, must \\(\\sum a_n\\) converge?"
+		r := generator.MultipleChoice(q, "yes", "no")
+		r.Explanation = "Direct comparison: the partial sums of \\(\\sum a_n\\) increase and are bounded above by the partial sums of the convergent \\(\\sum b_n\\), so they converge."
+		return r
 	}
-	table := []entry{
-		{"Does a positive term series have all terms >= 0? (yes/no)", "yes", "A positive term series ∑ aₙ has aₙ ≥ 0 for all n."},
-		{"Which test compares a series to another known series? (enter comparison)", "comparison", "Comparison test: if 0 ≤ aₙ ≤ bₙ and ∑ bₙ converges, then ∑ aₙ converges. If ∑ aₙ diverges, then ∑ bₙ diverges."},
-		{"If a_n/b_n tends to a positive constant, do both series share the same fate? (yes/no)", "yes", "Limit comparison: for positive series, if aₙ/bₙ → c where 0<c<∞, then ∑ aₙ and ∑ bₙ either both converge or both diverge; if aₙ/bₙ → c>0, both series have same fate."},
-		{"Which test uses the ratio of successive terms? (enter ratio)", "ratio", "Ratio test compares the ratio of successive terms a(n+1)/a(n); if lim = L < 1, converges absolutely. If L > 1, diverges. Inconclusive if L=1."},
-	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	q := "If \\(0\\le a_n\\le b_n\\) and \\(\\sum b_n\\) diverges, must \\(\\sum a_n\\) diverge?"
+	r := generator.MultipleChoice(q, "no", "yes")
+	r.Explanation = "No. A smaller series can converge while the larger one diverges, for example \\(a_n=1/n^{2}\\) under \\(b_n=1/n\\). Comparison only transfers convergence downwards and divergence upwards."
+	return r
 }
 
 type alternatingSeriesGen struct{}
@@ -3594,17 +3610,36 @@ func (g *ratioTestGen) Generate(ctx generator.GeneratorContext) generator.Proble
 type geometricSeriesGen struct{}
 
 func (g *geometricSeriesGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	a := randRange(ctx.Difficulty, 1, 6)
+	q := randRange(ctx.Difficulty, 2, 6)
+	if rand.Intn(3) == 0 {
+		ratio := fmt.Sprintf("%d", q)
+		if q-1 != 1 {
+			ratio = fmt.Sprintf("%d/%d", q, q-1)
+		}
+		r := fmt.Sprintf("Does \\(\\sum_{n=0}^{\\infty}\\left(%s\\right)^{n}\\) converge?", ratio)
+		res := generator.MultipleChoice(r, "no", "yes")
+		res.Explanation = fmt.Sprintf("The ratio is \\(%s>1\\), so the terms grow without bound and the series diverges. A geometric series converges only when \\(|r|<1\\).", ratio)
+		return res
 	}
-	table := []entry{
-		{"Find the sum of \\(\\sum_{n=0}^{\\infty}(1/2)^{n}\\).", "2", "Geometric with \\(a=1\\), \\(r=1/2\\): \\(1/(1-1/2) = 2\\)."},
-		{"Does sum r^n converge for r=1/2? (yes/no)", "yes", "Geometric sum a r^n converges iff |r|<1, summing to a/(1-r); for r=1/2 it converges."},
-		{"Find the sum of \\(\\sum_{n=0}^{\\infty}(1/3)^{n}\\).", "3/2", "\\(a=1\\), \\(r=1/3\\): \\(1/(1-1/3) = 3/2\\)."},
-		{"Does sum 2^n converge? (yes/no)", "no", "Ratio |r|=2>=1: terms do not even tend to zero, so it diverges."},
+	// Sum from n = 0: a/(1 - 1/q) = aq/(q-1), reduced to lowest terms.
+	num, den := a*q, q-1
+	d := mathutil.GCD(num, den)
+	num, den = num/d, den/d
+	answer := strconv.Itoa(num)
+	if den != 1 {
+		answer = fmt.Sprintf("%d/%d", num, den)
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	stem := fmt.Sprintf("\\left(\\frac{1}{%d}\\right)^{n}", q)
+	if a != 1 {
+		stem = fmt.Sprintf("%d\\left(\\frac{1}{%d}\\right)^{n}", a, q)
+	}
+	return generator.Problem{
+		Question:    fmt.Sprintf("Find the sum of \\(\\sum_{n=0}^{\\infty}%s\\).", stem),
+		Answer:      answer,
+		Explanation: fmt.Sprintf("Geometric with first term %d and ratio 1/%d: the sum is \\(\\frac{%d}{1-1/%d}=\\frac{%d}{%d}\\).", a, q, a, q, num, den),
+		Facts:       map[string]string{"a": strconv.Itoa(a), "q": strconv.Itoa(q)},
+	}
 }
 
 type nthTermGen struct{}
@@ -3659,31 +3694,59 @@ func (g *telescopingSeriesGen) Generate(ctx generator.GeneratorContext) generato
 type directCompareGen struct{}
 
 func (g *directCompareGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	p := randRange(ctx.Difficulty, 2, 5)
+	c := randRange(ctx.Difficulty, 1, 9)
+	if rand.Intn(4) == 0 {
+		res := generator.MultipleChoice(
+			"Which test proves convergence by bounding each term above by a larger convergent series?",
+			"direct comparison", "ratio test", "root test", "integral test")
+		res.Explanation = "Direct comparison needs a second series you already know: \\(0\\le a_n\\le b_n\\) with \\(\\sum b_n\\) convergent forces \\(\\sum a_n\\) to converge."
+		return res
 	}
-	table := []entry{
-		{"Which test uses domination by a convergent series? (enter comparison)", "comparison", "Direct comparison: 0≤a(n)≤b(n) and sum b(n) converges implies sum a(n) converges; divergence below forces divergence above."},
-		{"Does sum 1/(n^2+1) converge? (yes/no)", "yes", "1/(n^2+1) ≤ 1/n^2 and sum 1/n^2 converges; yes, compare with 1/n^2."},
-		{"Does sum 1/sqrt(n^2+n) converge? (yes/no)", "no", "Terms behave like 1/n; sum diverges by comparison below with a divergent harmonic series; no, compare below with a divergent series."},
+	if rand.Intn(3) == 0 {
+		// Divergent comparison: the harmonic-like series is the lower bound.
+		var q string
+		if rand.Intn(2) == 0 {
+			q = fmt.Sprintf("Does \\(\\sum_{n=1}^{\\infty}\\frac{1}{n+%d}\\) converge?", c)
+		} else {
+			q = fmt.Sprintf("Does \\(\\sum_{n=1}^{\\infty}\\frac{1}{\\sqrt{n}+%d}\\) converge?", c)
+		}
+		res := generator.MultipleChoice(q, "no", "yes")
+		res.Explanation = fmt.Sprintf("The denominator grows like \\(n\\) (or slower), so the terms dominate a shifted harmonic series, which diverges. Adding %d does not change that.", c)
+		return res
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	q := fmt.Sprintf("Does \\(\\sum_{n=1}^{\\infty}\\frac{1}{n^{%d}+%d}\\) converge?", p, c)
+	res := generator.MultipleChoice(q, "yes", "no")
+	res.Explanation = fmt.Sprintf("For \\(n\\ge 1\\) we have \\(\\frac{1}{n^{%d}+%d}<\\frac{1}{n^{%d}}\\), and \\(\\sum 1/n^{%d}\\) converges because \\(%d>1\\). Direct comparison gives convergence.", p, c, p, p, p)
+	return res
 }
 
 type limitCompareGen struct{}
 
 func (g *limitCompareGen) Generate(ctx generator.GeneratorContext) generator.Problem {
-	type entry struct {
-		q, a, e string
+	k := randRange(ctx.Difficulty, 1, 3)
+	d := randRange(ctx.Difficulty, 1, 3)
+	m := k + d
+	c := randRange(ctx.Difficulty, 1, 9)
+	if rand.Intn(3) == 0 {
+		// Ask for the comparison exponent directly; a small integer is typeable.
+		return generator.Problem{
+			Question:    fmt.Sprintf("For \\(\\sum_{n=1}^{\\infty}\\frac{n^{%d}}{n^{%d}+%d}\\), limit comparison with \\(\\sum 1/n^{p}\\) uses which \\(p\\)?", k, m, c),
+			Answer:      strconv.Itoa(d),
+			Explanation: fmt.Sprintf("The numerator has degree %d and the denominator degree %d, so the terms behave like \\(1/n^{%d}\\): \\(p=%d\\).", k, m, d, d),
+			Facts:       map[string]string{"k": strconv.Itoa(k), "m": strconv.Itoa(m), "p": strconv.Itoa(d)},
+		}
 	}
-	table := []entry{
-		{"Which test takes the limit of a_n/b_n? (enter comparison)", "comparison", "Limit comparison: finite positive limit implies same behavior; if lim a(n)/b(n) = L in (0,infinity), both series converge or both diverge."},
-		{"Does sum 1/(n^2-n) converge? (yes/no)", "yes", "Limit comparison on sum 1/(n^2-n): ratio with 1/n^2 tends to 1; sum 1/n^2 converges, so it converges (compare 1/n^2)."},
-		{"Does sum n/(n^3+1) converge? (yes/no)", "yes", "Limit comparison on sum n/(n^3+1): ratio with 1/n^2 tends to 1; converges (compare 1/n^2)."},
+	ans := "no"
+	why := fmt.Sprintf("The terms behave like \\(1/n^{%d}\\), and a p-series diverges when \\(p\\le 1\\).", d)
+	if d > 1 {
+		ans = "yes"
+		why = fmt.Sprintf("The terms behave like \\(1/n^{%d}\\), and \\(\\sum 1/n^{%d}\\) converges because \\(%d>1\\), so the limit comparison test gives convergence.", d, d, d)
 	}
-	e := table[rand.Intn(len(table))]
-	return generator.Problem{Question: e.q, Answer: e.a, Explanation: e.e}
+	q := fmt.Sprintf("Does \\(\\sum_{n=1}^{\\infty}\\frac{n^{%d}}{n^{%d}+%d}\\) converge?", k, m, c)
+	res := generator.MultipleChoice(q, ans, "yes", "no")
+	res.Explanation = why
+	return res
 }
 
 type absoluteConvergenceGen struct{}
