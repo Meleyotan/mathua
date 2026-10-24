@@ -2975,7 +2975,9 @@ func (g *derivDiffContinuityGen) Generate(ctx generator.GeneratorContext) genera
 	}
 	c := randRange(ctx.Difficulty, 1, 4)
 	var question, answer, explanation string
-	switch rand.Intn(5) {
+	// Six shapes: the removable case at the end is the sixth, so the bound must
+	// be six or the default branch is unreachable.
+	switch rand.Intn(6) {
 	case 0:
 		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=|x%+d|\\) continuous, differentiable, both or neither?", a, -a)
 		answer = contNotDiff
@@ -2997,7 +2999,7 @@ func (g *derivDiffContinuityGen) Generate(ctx generator.GeneratorContext) genera
 		answer = contNotDiff
 		explanation = fmt.Sprintf("A cube root is continuous at \\(x=%d\\), since the limit equals the value. Its derivative behaves like \\((x%+d)^{-2/3}\\), which grows without bound near \\(x=%d\\), so the tangent is vertical and the derivative does not exist.", a, -a, a)
 	default:
-		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=\\frac{x^{2}%+d}{x%+d}\\) continuous, differentiable, both or neither?", -a*a, -a)
+		question = fmt.Sprintf("At \\(x=%d\\), is \\(f(x)=\\frac{x^{2}%+d}{x%+d}\\) continuous, differentiable, both or neither?", a, -a*a, -a)
 		answer = neither
 		explanation = fmt.Sprintf("The numerator factors as \\((x%+d)(x%+d)\\), so the limit at \\(x=%d\\) exists and equals %d. The function itself is undefined there, because the expression still divides by zero: the discontinuity is removable, but at \\(x=%d\\) it is neither continuous nor differentiable.", -a, a, a, 2*a, a)
 	}
